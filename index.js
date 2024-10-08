@@ -29,7 +29,7 @@ const __dirname = dirname(__filename);
 const loadPlugins = async (folder) => {
   const pluginFiles = readdirSync(folder).filter(file => file.endsWith('.js'));
   for (const file of pluginFiles) {
-    const plugin = await import(join("file://" + folder, file));
+    const plugin = await import(join(folder, file));
     fastify.register(plugin.default);
   }
 };
