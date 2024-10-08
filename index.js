@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import fastifySwagger from 'fastify-swagger';
+import fastifyCors from 'fastify-cors';
 import { readdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -7,8 +8,13 @@ import { dirname, join } from 'path';
 const fastify = Fastify({ logger: true });
 const PORT = process.env.PORT || 3000;
 
+fastify.register(fastifyCors, {
+  origin: '*',
+  methods: ['GET', 'POST'],
+});
+
 fastify.register(fastifySwagger, {
-  routePrefix: '/docs',
+  routePrefix: '/',
   swagger: {
     info: {
       title: 'Maldev API',
@@ -16,7 +22,7 @@ fastify.register(fastifySwagger, {
       version: '1.0.0',
     },
     host: 'api-maldev.vercel.app',
-    schemes: ['http'],
+    schemes: ['https'],
     consumes: ['application/json'],
     produces: ['application/json'],
   },
