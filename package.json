@@ -1,0 +1,26 @@
+{
+  "name": "fastify-swagger",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon --watch . --ext js,mjs,json --exec node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@fastify/multipart": "*",
+    "@fastify/swagger": "*",
+    "@fastify/swagger-ui": "*",
+    "axios": "*",
+    "cheerio": "1.0.0-rc.12",
+    "fastify": "*"
+  },
+  "devDependencies": {
+    "nodemon": "*"
+  }
+}
