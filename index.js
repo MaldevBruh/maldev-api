@@ -11,7 +11,7 @@ let fastify;
 
 export default async function handler(req, res) {
   if (!fastify) {
-    fastify = Fastify({ logger: false });
+    fastify = Fastify({ logger: true });
 
     fastify.get('/', async(req, reply) => {
       try {
@@ -105,8 +105,13 @@ export default async function handler(req, res) {
     const routesPath = path.join(__dirname, 'routes');
     const files = await readdir(routesPath);
     for (const file of files) {
-      const route = await import(`./routes/${file}`);
-      await fastify.register(route.default);
+      try {
+        const route = await import(`./routes/${file}`);
+        await fastify.register(route.default);
+        console.log(`✅ Route ${file} registered`);
+      } catch (e) {
+        console.error(`❌ Error register route ${file}:`, err);
+      }
     }
 
     await fastify.ready();
