@@ -49,11 +49,7 @@ async function ssstik(url) {
       tt: s_tt
     });
 
-    let attempt = 0;
-    let videoResult = null;
-
-    while (attempt < 10 && !videoResult) {
-      attempt++;
+    for (let attempt = 1; attempt <= 10; attempt++) {
       try {
         const { data } = await axios.post('https://ssstik.io/abc?url=dl', form, {
           headers: {
@@ -64,12 +60,12 @@ async function ssstik(url) {
           }
         });
 
-        const $2 = cheerio.load(data);
-        const linkmp4 = $2('a.without_watermark').attr('href');
-        const linkmp3 = $2('a.music').attr('href');
+        const $res = cheerio.load(data);
+        const linkmp4 = $res('a.without_watermark').attr('href');
+        const linkmp3 = $res('a.music').attr('href');
 
         if (linkmp4) {
-          videoResult = {
+          return {
             ok: true,
             type: 'video',
             result: {
@@ -78,35 +74,31 @@ async function ssstik(url) {
             }
           };
         }
+
+        const result = [];
+        $res('img[data-splide-lazy]').each((_, e) => {
+          const slides = $res(e).attr('data-splide-lazy');
+          if (slides) result.push(slides);
+        });
+
+        if (result.length > 0) {
+          return {
+            ok: true,
+            type: 'image',
+            result
+          };
+        }
+
       } catch (err) {
         if (attempt >= 10) throw err;
       }
+
       await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
     }
 
-    if (videoResult) return videoResult;
-
-    const { data: fallbackData } = await axios.post('https://ssstik.io/abc?url=dl', form, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'Origin': 'https://ssstik.io',
-        'Referer': 'https://ssstik.io/',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36'
-      }
-    });
-
-    const $3 = cheerio.load(fallbackData);
-    const result = [];
-
-    $3('img[data-splide-lazy]').each((_, e) => {
-      const slides = $3(e).attr('data-splide-lazy');
-      if (slides) result.push(slides);
-    });
-
     return {
-      ok: true,
-      type: 'image',
-      result
+      ok: false,
+      message: 'Failed to fetch data after 10 attempts.'
     };
   } catch (e) {
     return {
