@@ -31,6 +31,7 @@ async function ssstik(url) {
     const { data: html } = await axios.get('https://ssstik.io/');
     const $ = cheerio.load(html);
     let s_tt = null;
+
     $('script').each((_, el) => {
       const scriptContent = $(el).html();
       if (scriptContent && scriptContent.includes('s_tt')) {
@@ -40,48 +41,76 @@ async function ssstik(url) {
           return false;
         }
       }
-   });
-   const form = qs.stringify({
-    id: url,
-    locale: 'en',
-    tt: s_tt
-   });
-   const { data } = await axios.post('https://ssstik.io/abc?url=dl', form, {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Origin': 'https://ssstik.io',
-      'Referer': 'https://ssstik.io/',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36'
-    }
-   });
-   const $2 = cheerio.load(data);
-   if($2('a.without_watermark').attr('href')) {
-     const linkmp4 = $2('a.without_watermark').attr('href');
-     const linkmp3 = $2('a.music').attr('href');
-     return {
-      ok: true,
-      type: 'video',
-      result: {
-        linkmp4: linkmp4 || 'Unknown',
-        linkmp3: linkmp3 || 'Unknown' 
-      }
-     }
-   } else {
-    const result = [];
-    $2('img[data-splide-lazy]').each((_, e) => {
-      const slides = $2(e).attr('data-splide-lazy');
-      result.push(slides);
     });
+
+    const form = qs.stringify({
+      id: url,
+      locale: 'en',
+      tt: s_tt
+    });
+
+    let attempt = 0;
+    let videoResult = null;
+
+    while (attempt < 3 && !videoResult) {
+      attempt++;
+      try {
+        const { data } = await axios.post('https://ssstik.io/abc?url=dl', form, {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'Origin': 'https://ssstik.io',
+            'Referer': 'https://ssstik.io/',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36'
+          }
+        });
+
+        const $2 = cheerio.load(data);
+        const linkmp4 = $2('a.without_watermark').attr('href');
+        const linkmp3 = $2('a.music').attr('href');
+
+        if (linkmp4) {
+          videoResult = {
+            ok: true,
+            type: 'video',
+            result: {
+              linkmp4: linkmp4 || 'Unknown',
+              linkmp3: linkmp3 || 'Unknown'
+            }
+          };
+        }
+      } catch (err) {
+        if (attempt >= 3) throw err;
+      }
+    }
+
+    if (videoResult) return videoResult;
+
+    const { data: fallbackData } = await axios.post('https://ssstik.io/abc?url=dl', form, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Origin': 'https://ssstik.io',
+        'Referer': 'https://ssstik.io/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36'
+      }
+    });
+
+    const $3 = cheerio.load(fallbackData);
+    const result = [];
+
+    $3('img[data-splide-lazy]').each((_, e) => {
+      const slides = $3(e).attr('data-splide-lazy');
+      if (slides) result.push(slides);
+    });
+
     return {
       ok: true,
       type: 'image',
       result
-    }
-   }
+    };
   } catch (e) {
     return {
       ok: false,
       message: e.response?.data?.error || e.response?.data || e.message || e
-    }
+    };
   }
 }
