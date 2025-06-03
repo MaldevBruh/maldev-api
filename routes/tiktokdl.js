@@ -81,6 +81,7 @@ async function ssstik(url) {
       } catch (err) {
         if (attempt >= 10) throw err;
       }
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
     }
 
     if (videoResult) return videoResult;
