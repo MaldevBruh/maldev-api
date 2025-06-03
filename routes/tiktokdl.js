@@ -52,7 +52,7 @@ async function ssstik(url) {
     let attempt = 0;
     let videoResult = null;
 
-    while (attempt < 3 && !videoResult) {
+    while (attempt < 10 && !videoResult) {
       attempt++;
       try {
         const { data } = await axios.post('https://ssstik.io/abc?url=dl', form, {
@@ -79,7 +79,7 @@ async function ssstik(url) {
           };
         }
       } catch (err) {
-        if (attempt >= 3) throw err;
+        if (attempt >= 10) throw err;
       }
     }
 
