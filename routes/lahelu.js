@@ -6,31 +6,12 @@ export default async function route(fastify) {
     url: '/api/random/lahelu',
     schema: {
       description: 'Get random meme from lahelu',
-      tags: ['Random'],
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            ok: { type: 'boolean' },
-            result: { type: 'object' },
-          },
-        },
-        500: {
-          type: 'object',
-          properties: {
-            ok: { type: 'boolean' },
-            message: { type: 'string' },
-          },
-          example: {
-            ok: false,
-            message: 'Something went wrong'
-          }
-        }
-      }
+      tags: ['Random']
     },
     handler: async (request, reply) => {
       const data = await lahelu();
-      return JSON.stringify(data, null, 2);
+      if(!data.ok) return reply.code(500).send(data);
+      return reply.code(200).send(data);
     },
   });
 }
@@ -64,7 +45,7 @@ async function lahelu() {
   } catch (e) {
     return {
       ok: false,
-      message: e.message
+      message: e.response?.data?.error || e.message
     };
   }
 }

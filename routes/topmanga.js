@@ -36,7 +36,7 @@ async function topmanga() {
   } catch (e) {
     return {
       ok: false,
-      message: e.message
+      message: e.response?.data?.error || e.message
     }
   }
 }

@@ -13,33 +13,20 @@ export default async function route(fastify) {
           imageUrl: { type: 'string' },
         },
         required: ['imageUrl'],
-      },
-      response: {
-        200: {
-          description: 'Image file',
-          type: 'string',
-          contentMediaType: 'image/png',
-        },
-        500: {
-          type: 'object',
-          properties: {
-            ok: { type: 'boolean' },
-            message: { type: 'string' },
-          },
-          example: {
-            ok: false,
-            message: 'Something went wrong'
-          }
-        }
       }
     },
     handler: async (request, reply) => {
       const { imageUrl } = request.query;
+      if(!imageUrl) return reply.code(400).send({
+        ok: false,
+        message: 'Please input parameter "imageUrl"'
+      });
       const data = await blackskin(imageUrl);
       
-      if(!data.ok) return reply.code(500).send({ ok: false, message: data.message });
+      if(!data.ok) return reply.code(500).send(data);
 
       reply
+        .code(200)
         .header('Content-Type', 'image/png')
         .send(data.result);
     },
@@ -64,7 +51,7 @@ async function blackskin(imageUrl, filter = 'hitam') {
   catch(e) {
     return {
       ok: false,
-      message: e.message
+      message: e.response?.data?.error || e.message
     }
   }
 }

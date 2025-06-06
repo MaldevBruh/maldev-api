@@ -23,9 +23,22 @@ export default async function handler(req, res) {
     });
 
     fastify.setErrorHandler((error, request, reply) => {
-      console.error('Fastify error:', error);
-      reply.code(500).send('Internal Server Error');
+    if (error.validation) {
+      const missingField = error.validation?.[0]?.params?.missingProperty;
+      return reply.status(400).send({
+        ok: false,
+        message: missingField
+          ? `Parameter "${missingField}" is required`
+          : 'Bad Request',
+      });
+    }
+  
+    reply.status(500).send({
+      ok: false,
+      message: 'Internal Server Error',
+      error: error.message,
     });
+  });
 
     fastify.setNotFoundHandler(async (request, reply) => {
       try {

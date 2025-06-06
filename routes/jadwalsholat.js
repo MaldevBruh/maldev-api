@@ -18,6 +18,10 @@ export default async function route(fastify) {
     },
     handler: async (request, reply) => {
       const { query } = request.query;
+      if(!query) return reply.code(400).send({
+        ok: false,
+        message: 'Please input parameter "query"'
+      });
       const data = await jadwalSholat(query);
       if(!data.ok) return reply.code(500).send(data);
       return reply.code(200).send(data);
@@ -46,13 +50,12 @@ async function jadwalSholat(kota) {
       result: {
         kota: a[0].name,
         jadwalsholat: res
-      },
-      creator: 'MaldevBruh'
+      }
     };
   } catch (error) {
     return {
       ok: false,
-      message: error.message
+      message: error.response?.data?.error || e.message
     }
   }
 }

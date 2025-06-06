@@ -14,32 +14,17 @@ export default async function route(fastify) {
           name: { type: 'string' },
         },
         required: ['name'],
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            ok: { type: 'boolean' },
-            result: { type: 'string' },
-          },
-        },
-        500: {
-          type: 'object',
-          properties: {
-            ok: { type: 'boolean' },
-            message: { type: 'string' },
-          },
-          example: {
-            ok: false,
-            message: 'Something went wrong'
-          }
-        }
       }
     },
     handler: async (request, reply) => {
       const { name } = request.query;
+      if(!name) return reply.code(400).send({
+        ok: false,
+        message: 'Please input parameter "name"'
+      });
       const data = await cekKhodam(name);
-      return data;
+      if(!data.ok) return reply.code(500).send(data);
+      return reply.code(200).send(data);
     },
   });
 }
@@ -57,7 +42,7 @@ async function cekKhodam(name) {
   } catch (e) {
     return {
       ok: false,
-      message: e.message
+      message: e.response?.data?.error || e.message
     }
   }
 }

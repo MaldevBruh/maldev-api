@@ -19,9 +19,13 @@ export default async function route(fastify) {
     },
     handler: async (request, reply) => {
       const { url } = request.query;
+      if(!url) return reply.code(400).send({
+        ok: false,
+        message: 'Please input parameter "url"'
+      });
       const data = await ssstik(url);
       if(!data.ok) return reply.code(500).send(data);
-      return reply.send(data);
+      return reply.code(200).send(data);
     },
   });
 }

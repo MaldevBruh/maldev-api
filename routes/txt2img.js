@@ -13,42 +13,23 @@ export default async function route(fastify) {
           prompt: { type: 'string' },
         },
         required: ['prompt'],
-      },
-      response: {
-        200: {
-          description: 'Image file',
-          type: 'string',
-          format: 'binary'
-        },
-        500: {
-          type: 'object',
-          properties: {
-            ok: { type: 'boolean' },
-            message: { type: 'string' },
-          },
-          example: {
-            ok: false,
-            message: 'Something went wrong'
-          }
-        }
       }
     },
     handler: async (request, reply) => {
       const { prompt } = request.query;
+      if(!prompt) return reply.code(400).send({
+        ok: false,
+        message: 'Please input parameter "prompt"'
+      });
       const data = await hf_txt2img(prompt);
-      if(!data.ok) {
-        return reply.code(500).send({ ok: false, message: data.message });
-      }
-
-      try {
-        const imageResponse = await axios.get(data.result, { responseType: 'arraybuffer' });
+      if(!data.ok) return reply.code(500).send(data);
+      
+      const imageResponse = await axios.get(data.result, { responseType: 'arraybuffer' });
         reply
+          .code(200)
           .header('Content-Type', 'image/png')
           .send(imageResponse.data);
-      } catch (error) {
-        reply.code(500).send({ ok: false, message: 'Failed to download image' });
-      }
-    },
+    }
   });
 }
 
@@ -86,8 +67,7 @@ async function hf_txt2img(prompt) {
     } catch (e) {
       res = {
         ok: false,
-        result: {},
-        message: e.message
+        message: e.response?.data?.error || e.message
       }
     }
     if(!res.ok) console.log('Retrying...');

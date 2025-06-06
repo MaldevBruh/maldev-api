@@ -15,43 +15,22 @@ export default async function route(fastify) {
           query: { type: 'string' },
         },
         required: ['query'],
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            ok: { type: 'boolean' },
-            result: { type: 'object' },
-          },
-        },
-        500: {
-          type: 'object',
-          properties: {
-            ok: { type: 'boolean' },
-            message: { type: 'string' },
-          },
-          example: {
-            ok: false,
-            message: 'Something went wrong'
-          }
-        }
       }
     },
     handler: async (request, reply) => {
       const { query } = request.query;
+      if(!query) return reply.code(400).send({
+        ok: false,
+        message: 'Please input parameter "query"'
+      });
       const data = await malSearch(query);
-      return JSON.stringify(data, null, 2);
+      if(!data.ok) return reply.code(500).send(data);
+      return reply.code(200).send(data);
     }
   });
 }
 
 async function malSearch(query) {
-  if(!query) {
-    return {
-      ok: false,
-      message: 'Prompt is required'
-    }
-  }
   const URL = `https://myanimelist.net/search/prefix.json?type=all&keyword=${encodeURIComponent(query)}&v=1`;
 
   const formData = new FormData();
@@ -121,7 +100,7 @@ async function malSearch(query) {
   } catch(e) {
     return {
       ok: false,
-      message: e.message
+      message: e.response?.data?.error || e.message
     }
   }
 }
