@@ -123,7 +123,7 @@ export default async function handler(req, res) {
         await fastify.register(route.default);
         console.log(`✅ Route ${file} registered`);
       } catch (e) {
-        console.error(`❌ Error register route ${file}:`, err);
+        console.error(`❌ Error register route ${file}:`, e);
       }
     }
 
