@@ -34,13 +34,18 @@ export default async function route(fastify) {
       },
       response: {
         200: {
-          type: 'object',
-          properties: {
-            ok: { type: 'boolean' },
-            result: { type: 'string', default: 'https://result.arting.ai/output/result/202506/07/8c34792a089b4d3ca0efc924209b83c5.png' }
+          description: 'OK',
+          content: {
+            'image/png': {
+              schema: {
+                type: 'string',
+                default: 'binary'
+              }
+            }
           }
         },
         400: {
+          description: 'Bad Request',
           type: 'object',
           properties: {
             ok: { type: 'boolean', default: false },
@@ -48,6 +53,7 @@ export default async function route(fastify) {
           }
         },
         500: {
+          description: 'Internal Server Error',
           type: 'object',
           properties: {
             ok: { type: 'boolean', default: false },
@@ -64,7 +70,8 @@ export default async function route(fastify) {
       });
       const data = await artingAi(prompt, model_id, negative_prompt, width, height);
       if(!data.ok) return reply.code(500).send(data);
-      reply.code(200).send(data);
+      const response = await axios.get(data.result, { responseType: 'arraybuffer' });
+      reply.code(200).header('Content-Type', 'image/png').send(response.data);
     }
   });
 }
