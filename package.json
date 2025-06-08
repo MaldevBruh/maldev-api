@@ -19,6 +19,7 @@
     "axios": "*",
     "cheerio": "1.0.0-rc.12",
     "fastify": "*",
+    "file-type": "*",
     "qs": "*"
   },
   "devDependencies": {
