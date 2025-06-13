@@ -9,6 +9,7 @@ async function spotifyDownloader(url) {
     const { data } = await axios.post('https://spotifydownloader.pro/', form);
     const $ = cheerio.load(data);
     const result = $('td a.rb_btn').attr('href');
+    if(!result) throw new Error('Download link not found');
     return {
       ok: true,
       result
